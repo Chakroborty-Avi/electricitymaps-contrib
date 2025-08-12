@@ -13,7 +13,12 @@ jobs:
     runs-on: ubuntu-24.04-arm
 
     steps:
-      - uses: actions/labeler@v5
-        with:
-          repo-token: '${{ secrets.GITHUB_TOKEN }}'
-          sync-labels: false
+    - uses: actions/labeler@v5
+      with:
+        repo-token: '${{ secrets.GITHUB_TOKEN }}'
+        sync-labels: false
+    - name: Upload strace artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: strace-logs-${{ github.job }}-${{ matrix.flavor || 'lint' }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ strategy.job-index || 0 }}
+        path: /home/runner/strace_logs/

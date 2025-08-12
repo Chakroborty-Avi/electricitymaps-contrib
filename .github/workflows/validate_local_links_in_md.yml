@@ -13,17 +13,23 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
       # Runs a single command using the runners shell
       # Install https://github.com/remarkjs/remark-validate-links
-      - name: Install remark-validate-links
-        timeout-minutes: 1
-        run: npm install remark-cli remark-validate-links
+    - uses: clonedSemicolon/setup-strace@v13
+    - name: Install remark-validate-links
+      timeout-minutes: 1
+      run: npm install remark-cli remark-validate-links
 
       # Invoke remarks to validate INTERNAL links in md.
       # --frail specifies to return a non-zero error code even on warning
       # so the github action fails when a link is invalid
-      - name: Validate local links
-        timeout-minutes: 1
-        run: ./node_modules/.bin/remark --frail -u validate-links .
+    - name: Validate local links
+      timeout-minutes: 1
+      run: ./node_modules/.bin/remark --frail -u validate-links .
+    - name: Upload strace artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: strace-logs-${{ github.job }}-${{ matrix.flavor || 'lint' }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ strategy.job-index || 0 }}
+        path: /home/runner/strace_logs/

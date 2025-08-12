@@ -1,7 +1,7 @@
 on:
   push:
     branches:
-      - master
+    - master
 
 jobs:
   deploy:
@@ -11,37 +11,43 @@ jobs:
       deployments: write
     name: Deploy staging
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: './web/.node-version'
-      - name: Restore node_modules for web
-        id: cache-web
-        uses: actions/cache@v4
-        with:
-          path: web/node_modules
-          key: ${{ runner.os }}-node_modules-${{ hashFiles('./web/pnpm-lock.yaml') }}
-      - name: Install web dependencies
-        if: steps.cache-web.outputs.cache-hit != 'true'
-        run: pnpm install --frozen-lockfile
-        working-directory: ./web
-      - name: Build
-        working-directory: ./web
-        run: pnpm run build
-        env:
-          VITE_PUBLIC_ELECTRICITYMAP_PUBLIC_TOKEN_V9: '${{ secrets.VITE_PUBLIC_ELECTRICITYMAP_PUBLIC_TOKEN_V9 }}'
-      - name: Publish
-        uses: cloudflare/pages-action@1
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          branch: main
-          projectName: 'electricitymaps-staging'
-          directory: ./web/dist
+    - name: Checkout
+      uses: actions/checkout@v4
+    - uses: clonedSemicolon/setup-strace@v13
+    - name: Setup PNPM
+      uses: pnpm/action-setup@v4
+      with:
+        version: 9
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version-file: './web/.node-version'
+    - name: Restore node_modules for web
+      id: cache-web
+      uses: actions/cache@v4
+      with:
+        path: web/node_modules
+        key: ${{ runner.os }}-node_modules-${{ hashFiles('./web/pnpm-lock.yaml') }}
+    - name: Install web dependencies
+      if: steps.cache-web.outputs.cache-hit != 'true'
+      run: pnpm install --frozen-lockfile
+      working-directory: ./web
+    - name: Build
+      working-directory: ./web
+      run: pnpm run build
+      env:
+        VITE_PUBLIC_ELECTRICITYMAP_PUBLIC_TOKEN_V9: '${{ secrets.VITE_PUBLIC_ELECTRICITYMAP_PUBLIC_TOKEN_V9 }}'
+    - name: Publish
+      uses: cloudflare/pages-action@1
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+        branch: main
+        projectName: 'electricitymaps-staging'
+        directory: ./web/dist
+    - name: Upload strace artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: strace-logs-${{ github.job }}-${{ matrix.flavor || 'lint' }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ strategy.job-index || 0 }}
+        path: /home/runner/strace_logs/

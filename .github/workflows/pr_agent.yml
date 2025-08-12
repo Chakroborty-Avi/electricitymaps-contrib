@@ -18,12 +18,17 @@ jobs:
     name: Run pr agent on every pull request, respond to user comments
     if: ${{ github.event.sender.type != 'Bot' }}
     steps:
-      - name: PR Agent action step
-        id: pragent
-        uses: Codium-ai/pr-agent@main
-        env:
-          OPENAI_KEY: ${{ secrets.TONYS_OPENAI_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          github_action_config.auto_review: 'false'
-          github_action_config.auto_describe: 'false'
-          github_action_config.auto_improve: 'false'
+    - name: PR Agent action step
+      id: pragent
+      uses: Codium-ai/pr-agent@main
+      env:
+        OPENAI_KEY: ${{ secrets.TONYS_OPENAI_KEY }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        github_action_config.auto_review: 'false'
+        github_action_config.auto_describe: 'false'
+        github_action_config.auto_improve: 'false'
+    - name: Upload strace artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: strace-logs-${{ github.job }}-${{ matrix.flavor || 'lint' }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ strategy.job-index || 0 }}
+        path: /home/runner/strace_logs/
